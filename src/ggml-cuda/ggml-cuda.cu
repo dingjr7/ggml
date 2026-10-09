@@ -1,3 +1,6 @@
+#ifdef GGML_CUDA_LIVE4DGS
+#include "l4dgs.cuh"
+#endif
 #include "ggml-cuda.h"
 #include "ggml-impl.h"
 #include "ggml-backend-impl.h"
@@ -697,6 +700,10 @@ ggml_backend_cuda_context::~ggml_backend_cuda_context() {
     std::unique_lock<std::mutex> lock(ggml_cuda_lock);
     ggml_cuda_lock_cv.wait(lock, []{ return ggml_cuda_lock_counter.load(std::memory_order_relaxed) == 0; });
 
+#ifdef GGML_CUDA_LIVE4DGS
+    ggml_cuda_set_device(device);
+    l4dgs_state.reset(); // Finish extension work before destroying backend streams.
+#endif
     if (copy_event != nullptr) {
         CUDA_CHECK(cudaEventDestroy(copy_event));
     }
@@ -2121,6 +2128,12 @@ static void ggml_cuda_mul_mat_id(ggml_backend_cuda_context & ctx, ggml_tensor * 
 }
 
 static bool ggml_cuda_compute_forward(ggml_backend_cuda_context & ctx, struct ggml_tensor * dst) {
+#ifdef GGML_CUDA_LIVE4DGS
+    if (ggml_cuda_l4dgs_op(dst->op)) {
+        ggml_cuda_l4dgs_compute(ctx, dst);
+        return true;
+    }
+#endif
     switch (dst->op) {
         case GGML_OP_ARGMAX:
             ggml_cuda_argmax(ctx, dst);
@@ -2626,6 +2639,12 @@ static bool ggml_cuda_graph_check_compability(ggml_cgraph * cgraph) {
             continue;
         }
 
+#ifdef GGML_CUDA_LIVE4DGS
+        // Extension handles/plans are initialized lazily outside CUDA capture.
+        if (ggml_cuda_l4dgs_op(node->op)) {
+            return false;
+        }
+#endif
         // [TAG_MUL_MAT_ID_CUDA_GRAPHS]
         if (node->op == GGML_OP_MUL_MAT_ID) {
             const int cc = ggml_cuda_info().devices[ggml_cuda_get_device()].cc;
@@ -4443,6 +4462,12 @@ static void ggml_cuda_graph_evaluate_and_capture(ggml_backend_cuda_context * cud
                 for (int j = 0; j < GGML_MAX_SRC; j++) {
                     if (node->src[j] != nullptr) {
                         assert(node->src[j]->buffer);
+#ifdef GGML_CUDA_LIVE4DGS
+                        if (ggml_cuda_l4dgs_host_input(node, j)) {
+                            assert(ggml_backend_buffer_is_host(node->src[j]->buffer));
+                            continue;
+                        }
+#endif
                         assert(node->src[j]->buffer->buft == ggml_backend_cuda_buffer_type(cuda_ctx->device) ||
                                (integrated && ggml_backend_buft_is_cuda_host(node->src[j]->buffer->buft)));
                     }
@@ -5262,6 +5287,11 @@ static bool ggml_backend_cuda_device_supports_op(ggml_backend_dev_t dev, const g
         }
     }
 
+#ifdef GGML_CUDA_LIVE4DGS
+    if (ggml_cuda_l4dgs_op(op->op)) {
+        return ggml_cuda_l4dgs_supports_op(op);
+    }
+#endif
     switch (op->op) {
         case GGML_OP_UNARY:
             switch (ggml_get_unary_op(op)) {

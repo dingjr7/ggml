@@ -422,6 +422,10 @@ static ggml_backend_buffer_t ggml_backend_cpu_device_buffer_from_host_ptr(ggml_b
 }
 
 static bool ggml_backend_cpu_device_supports_op(ggml_backend_dev_t dev, const struct ggml_tensor * op) {
+    // Forward-only extension nodes have CUDA implementations only.
+    if (op->op >= GGML_OP_L4DGS_LINEAR && op->op <= GGML_OP_L4DGS_PREFILL_PAGED) {
+        return false;
+    }
     const struct ggml_tensor * src0 = op->src[0];
     const struct ggml_tensor * src1 = op->src[1];
 

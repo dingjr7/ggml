@@ -1443,7 +1443,12 @@ struct ggml_cuda_stream_context {
     }
 };
 
+struct ggml_cuda_l4dgs_state;
+
 struct ggml_backend_cuda_context {
+#ifdef GGML_CUDA_LIVE4DGS
+    std::shared_ptr<ggml_cuda_l4dgs_state> l4dgs_state;
+#endif
     int device;
     std::string name;
     cudaEvent_t copy_event = nullptr;

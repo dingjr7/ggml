@@ -1099,9 +1099,27 @@ static const char * GGML_OP_NAME[GGML_OP_COUNT] = {
     "OPT_STEP_SGD",
 
     "GLU",
+    "L4DGS_LINEAR",
+    "L4DGS_NORM",
+    "L4DGS_RESIDUAL",
+    "L4DGS_ROPE2D",
+    "L4DGS_GATHER_ROWS",
+    "L4DGS_SCATTER_ROWS",
+    "L4DGS_NORMALIZE_RGB",
+    "L4DGS_POSITIONS2D",
+    "L4DGS_INTERPOLATE",
+    "L4DGS_ADD_POSITIONS",
+    "L4DGS_PIXEL_SHUFFLE",
+    "L4DGS_SPATIAL_MEAN",
+    "L4DGS_GAUSSIAN",
+    "L4DGS_POSE",
+    "L4DGS_DEPTH_TO_XYZ",
+    "L4DGS_TRANSFORM_POINTS",
+    "L4DGS_PREFILL_RAGGED",
+    "L4DGS_PREFILL_PAGED",
 };
 
-static_assert(GGML_OP_COUNT == 101, "GGML_OP_COUNT != 101");
+static_assert(GGML_OP_COUNT == 119, "GGML_OP_COUNT != 119");
 
 static const char * GGML_OP_SYMBOL[GGML_OP_COUNT] = {
     "none",
@@ -1214,9 +1232,27 @@ static const char * GGML_OP_SYMBOL[GGML_OP_COUNT] = {
     "sgd(x)",
 
     "glu(x)",
+    "l4dgs_linear(x)",
+    "l4dgs_norm(x)",
+    "l4dgs_residual(x)",
+    "l4dgs_rope2d(x)",
+    "l4dgs_gather_rows(x)",
+    "l4dgs_scatter_rows(x)",
+    "l4dgs_normalize_rgb(x)",
+    "l4dgs_positions2d(x)",
+    "l4dgs_interpolate(x)",
+    "l4dgs_add_positions(x)",
+    "l4dgs_pixel_shuffle(x)",
+    "l4dgs_spatial_mean(x)",
+    "l4dgs_gaussian(x)",
+    "l4dgs_pose(x)",
+    "l4dgs_depth_to_xyz(x)",
+    "l4dgs_transform_points(x)",
+    "l4dgs_prefill_ragged(x)",
+    "l4dgs_prefill_paged(x)",
 };
 
-static_assert(GGML_OP_COUNT == 101, "GGML_OP_COUNT != 101");
+static_assert(GGML_OP_COUNT == 119, "GGML_OP_COUNT != 119");
 
 static_assert(GGML_OP_POOL_COUNT == 2, "GGML_OP_POOL_COUNT != 2");
 

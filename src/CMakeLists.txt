@@ -198,6 +198,7 @@ add_library(ggml-base
             ../include/gguf.h
             ggml.c
             ggml.cpp
+            ggml-l4dgs.cpp
             ggml-alloc.c
             ggml-backend.cpp
             ggml-backend-meta.cpp

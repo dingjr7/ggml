@@ -2165,6 +2165,25 @@ static void ggml_compute_forward(struct ggml_compute_params * params, struct ggm
             {
                 // nop
             } break;
+        case GGML_OP_L4DGS_LINEAR:
+        case GGML_OP_L4DGS_NORM:
+        case GGML_OP_L4DGS_RESIDUAL:
+        case GGML_OP_L4DGS_ROPE2D:
+        case GGML_OP_L4DGS_GATHER_ROWS:
+        case GGML_OP_L4DGS_SCATTER_ROWS:
+        case GGML_OP_L4DGS_NORMALIZE_RGB:
+        case GGML_OP_L4DGS_POSITIONS2D:
+        case GGML_OP_L4DGS_INTERPOLATE:
+        case GGML_OP_L4DGS_ADD_POSITIONS:
+        case GGML_OP_L4DGS_PIXEL_SHUFFLE:
+        case GGML_OP_L4DGS_SPATIAL_MEAN:
+        case GGML_OP_L4DGS_GAUSSIAN:
+        case GGML_OP_L4DGS_POSE:
+        case GGML_OP_L4DGS_DEPTH_TO_XYZ:
+        case GGML_OP_L4DGS_TRANSFORM_POINTS:
+        case GGML_OP_L4DGS_PREFILL_RAGGED:
+        case GGML_OP_L4DGS_PREFILL_PAGED:
+            GGML_ABORT("Live4DGS forward ops require the CUDA backend");
         case GGML_OP_COUNT:
             {
                 GGML_ABORT("fatal error");
