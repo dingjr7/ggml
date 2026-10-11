@@ -162,31 +162,31 @@ void ggml_cuda_l4dgs_compute(ggml_backend_cuda_context& ctx, ggml_tensor* y) {
     memcpy(&f, p, sizeof(f));
     auto fdata = [](ggml_tensor* t) { return static_cast<float*>(t->data); };
     switch (y->op) {
-    case GGML_OP_L4DGS_LINEAR:
+    case GGML_OP_SPLATCODEC_LINEAR:
         linear(ctx, state, y);
         break;
-    case GGML_OP_L4DGS_NORM:
+    case GGML_OP_SPLATCODEC_NORM:
         norm(ctx, y);
         break;
-    case GGML_OP_L4DGS_RESIDUAL:
+    case GGML_OP_SPLATCODEC_RESIDUAL:
         residual_kernel<<<grid(n), 256, 0, s>>>(x->data, x->type, b->data, b->type,
                                                 z ? z->data : nullptr, z ? z->type : GGML_TYPE_F32,
                                                 y->data, y->type, n, x->ne[0]);
         break;
-    case GGML_OP_L4DGS_ROPE2D:
+    case GGML_OP_SPLATCODEC_ROPE2D:
         rope_kernel<<<grid(n), 256, 0, s>>>(
             x->data, y->data, x->type, static_cast<int64_t*>(b->data), n, x->ne[1], x->ne[0], f);
         break;
-    case GGML_OP_L4DGS_POSITIONS2D:
+    case GGML_OP_SPLATCODEC_POSITIONS2D:
         positions_kernel<<<grid(n), 256, 0, s>>>(static_cast<int64_t*>(y->data), n, p[0], p[1],
                                                  p[3]);
         break;
-    case GGML_OP_L4DGS_GATHER_ROWS:
-    case GGML_OP_L4DGS_SCATTER_ROWS: {
+    case GGML_OP_SPLATCODEC_GATHER_ROWS:
+    case GGML_OP_SPLATCODEC_SCATTER_ROWS: {
         int64_t w;
         memcpy(&w, p, sizeof(w));
         w *= ggml_type_size(x->type);
-        bool scatter = y->op == GGML_OP_L4DGS_SCATTER_ROWS;
+        bool scatter = y->op == GGML_OP_SPLATCODEC_SCATTER_ROWS;
         if (scatter)
             CUDA_CHECK(
                 cudaMemcpyAsync(y->data, z->data, ggml_nbytes(y), cudaMemcpyDeviceToDevice, s));
@@ -197,10 +197,10 @@ void ggml_cuda_l4dgs_compute(ggml_backend_cuda_context& ctx, ggml_tensor* y) {
                 static_cast<int32_t*>(b->data), bytes, w, scatter);
         break;
     }
-    case GGML_OP_L4DGS_NORMALIZE_RGB:
+    case GGML_OP_SPLATCODEC_NORMALIZE_RGB:
         rgb_kernel<<<grid(n), 256, 0, s>>>(x->data, x->type, fdata(y), n);
         break;
-    case GGML_OP_L4DGS_INTERPOLATE: {
+    case GGML_OP_SPLATCODEC_INTERPOLATE: {
         Converted in(ctx, x, GGML_TYPE_F32);
         int h = p[0], w = p[1], size = p[2], c = x->ne[0];
         if (h == size && w == size) {
@@ -218,36 +218,36 @@ void ggml_cuda_l4dgs_compute(ggml_backend_cuda_context& ctx, ggml_tensor* y) {
             cudaMemcpyAsync(y->data, in.data, c * sizeof(float), cudaMemcpyDeviceToDevice, s));
         break;
     }
-    case GGML_OP_L4DGS_ADD_POSITIONS: {
+    case GGML_OP_SPLATCODEC_ADD_POSITIONS: {
         Converted pos(ctx, b, GGML_TYPE_F32);
         add_position_kernel<<<grid(n), 256, 0, s>>>(
             x->data, x->type, static_cast<const float*>(pos.data), static_cast<int64_t*>(z->data),
             fdata(y), x->ne[0], b->ne[1] - 1, n);
         break;
     }
-    case GGML_OP_L4DGS_PIXEL_SHUFFLE:
+    case GGML_OP_SPLATCODEC_PIXEL_SHUFFLE:
         shuffle_kernel<<<grid(n), 256, 0, s>>>(x->data, y->data, x->type, p[0], p[1], p[2],
                                                y->ne[0], n);
         break;
-    case GGML_OP_L4DGS_SPATIAL_MEAN:
+    case GGML_OP_SPLATCODEC_SPATIAL_MEAN:
         mean_kernel<<<grid(n), 256, 0, s>>>(x->data, x->type, y->data, x->ne[0],
                                             ggml_nelements(x) / n, n);
         break;
-    case GGML_OP_L4DGS_GAUSSIAN:
+    case GGML_OP_SPLATCODEC_GAUSSIAN:
         gaussian_packed<<<grid(n / 8), 256, 0, s>>>(fdata(x), fdata(y), n / 8);
         break;
-    case GGML_OP_L4DGS_POSE:
+    case GGML_OP_SPLATCODEC_POSE:
         pose(ctx, state, y);
         break;
-    case GGML_OP_L4DGS_DEPTH_TO_XYZ:
+    case GGML_OP_SPLATCODEC_DEPTH_TO_XYZ:
         depth_kernel<<<grid(n / 3), 256, 0, s>>>(fdata(x), fdata(y), n / 3);
         break;
-    case GGML_OP_L4DGS_TRANSFORM_POINTS:
+    case GGML_OP_SPLATCODEC_TRANSFORM_POINTS:
         transform_kernel<<<grid(n), 256, 0, s>>>(fdata(x), fdata(b), fdata(y), n,
                                                  (n / 3) / (ggml_nelements(b) / 16));
         break;
-    case GGML_OP_L4DGS_PREFILL_RAGGED:
-    case GGML_OP_L4DGS_PREFILL_PAGED:
+    case GGML_OP_FLASHINFER_PREFILL_RAGGED:
+    case GGML_OP_FLASHINFER_PREFILL_PAGED:
         prefill(ctx, state, y);
         break;
     default:

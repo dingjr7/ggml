@@ -56,7 +56,7 @@ static std::vector<int32_t> host_indices(const ggml_tensor* t) {
 }
 static std::shared_ptr<Plan> plan(ggml_tensor* y, State& state) {
     auto hq = host_indices(y->src[3]), hk = host_indices(y->src[4]);
-    bool paged = y->op == GGML_OP_L4DGS_PREFILL_PAGED;
+    bool paged = y->op == GGML_OP_FLASHINFER_PREFILL_PAGED;
     std::vector<int32_t> hp = paged ? host_indices(y->src[5]) : std::vector<int32_t>{};
     GGML_ASSERT(hq.size() == hk.size() && hq.size() > 1 && hq.size() <= INT_MAX &&
                 hq.front() == 0 && hk.front() == 0);
@@ -160,7 +160,7 @@ template <class Params> static void dispatch(Params& a, Plan& p, cudaStream_t s)
 }
 void prefill(ggml_backend_cuda_context& ctx, State& state, ggml_tensor* y) {
     auto p = plan(y, state);
-    if (y->op == GGML_OP_L4DGS_PREFILL_PAGED) {
+    if (y->op == GGML_OP_FLASHINFER_PREFILL_PAGED) {
         Paged a;
         schedule(a, *p, y);
         a.paged_kv = paged_kv_t<BFloat, int32_t>(y->ne[1], 1, 64, p->hq.size() - 1, QKVLayout::kNHD,
